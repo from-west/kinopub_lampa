@@ -1,4 +1,4 @@
-// == KinoPub плагин для Lampa v2 ==
+// KinoPub плагин для Lampa v2.1 ==
 (function () {
     'use strict';
 
@@ -13,15 +13,12 @@
 
         this.create = function () {
             this.activity.loader(true);
-
             renderMenu();
-
             if (!token) {
                 askLogin();
             } else {
                 loadItems(currentSection);
             }
-
             return this.render();
         };
 
@@ -66,7 +63,7 @@
         }
 
         function doAuth(username, password) {
-            var basic = 'a2FkaTprYWRpc2VjcmV0'; // client_id:client_secret base64 (пример)
+            var basic = 'a2FkaTprYWRpc2VjcmV0';
             $.ajax({
                 url: 'https://api.kinopub.me/oauth2/token',
                 method: 'POST',
@@ -78,6 +75,7 @@
                 success: function (data) {
                     token = data.access_token;
                     Lampa.Storage.set('kp_token', token);
+                    Lampa.Noty.show('Авторизация успешна');
                     loadItems(currentSection);
                 },
                 error: function () {
@@ -152,21 +150,31 @@
         };
     }
 
-    function addPluginToMenu() {
-        var menuItem = $('<li class="menu__item selector"><div class="menu__ico"><svg width="16" height="16" fill="currentColor"><circle cx="8" cy="8" r="8"/></svg></div><div class="menu__text">KinoPub</div></li>');
-        menuItem.on('hover:enter', function () {
+
+    Lampa.Component.add('kinopub_plugin', KinopubPlugin);
+
+
+    Lampa.SettingsApi.addComponent({
+        component: 'kinopub_plugin',
+        name: 'KinoPub'
+    });
+
+    Lampa.SettingsApi.addParam({
+        component: 'kinopub_plugin',
+        param: {
+            name: 'login_button',
+            type: 'button'
+        },
+        field: {
+            name: '🔐 Войти в KinoPub'
+        },
+        onSelect: function () {
             Lampa.Activity.push({
                 url: 'kp',
                 title: 'KinoPub',
                 component: 'kinopub_plugin',
                 page: 1
             });
-        });
-        $('.menu .menu__list').eq(0).append(menuItem);
-    }
-
-    Lampa.Component.add('kinopub_plugin', KinopubPlugin);
-
-    if (window.appready) addPluginToMenu();
-    else Lampa.Listener.follow('app', addPluginToMenu);
+        }
+    });
 })();
